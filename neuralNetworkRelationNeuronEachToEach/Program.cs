@@ -25,8 +25,8 @@ namespace neuralNetworkRelationNeuronEachToEach
                 Console.WriteLine("now");
             }
             Console.WriteLine($"{nn.countNeironInHideLayer}");
-            var inputsList = DataSetGenerator.getInputList(100, 2, 10);
-            var outputsList = DataSetGenerator.getOutputList(inputsList);
+            var inputsList = DataSetGenerator.getInputListNumber(100, 2, 10);
+            var outputsList = DataSetGenerator.getOutputListForMaxId(inputsList);
             double[,] inputs = DataSetGenerator.getInputsMatrix(inputsList);
             DataSetGenerator.showInputOutputData(outputsList.ToArray(), inputs);
 
@@ -34,7 +34,7 @@ namespace neuralNetworkRelationNeuronEachToEach
             var countRight = 0;
             for (int i = 0; i < 10; i++)
             {
-                var inputsForPredict = DataSetGenerator.getInputDataRowArray(2);
+                var inputsForPredict = DataSetGenerator.getInputUniqueNumberDataRowArray(2);
                 var result = nn.Predict(inputsForPredict);
                 Console.WriteLine($"{String.Join(",", inputsForPredict)}");
                 Console.WriteLine($"expected - {DataSetGenerator.getMaxId(inputsForPredict)}");
@@ -74,8 +74,8 @@ namespace neuralNetworkRelationNeuronEachToEach
                 Console.WriteLine("now");
             }
             Console.WriteLine($"{nn.countNeironInHideLayer}");
-            var inputsList = DataSetGenerator.getInputList(100, 3, 10);
-            var outputsList = DataSetGenerator.getOutputList(inputsList);
+            var inputsList = DataSetGenerator.getInputListNumber(100, 3, 10);
+            var outputsList = DataSetGenerator.getOutputListForMaxId(inputsList);
             double[,] inputs = DataSetGenerator.getInputsMatrix(inputsList);
             DataSetGenerator.showInputOutputData(outputsList.ToArray(), inputs);
 
@@ -83,7 +83,7 @@ namespace neuralNetworkRelationNeuronEachToEach
             var countRight = 0;
             for (int i = 0; i < 10; i++)
             {
-                var inputsForPredict = DataSetGenerator.getInputDataRowArray(3);
+                var inputsForPredict = DataSetGenerator.getInputUniqueNumberDataRowArray(3);
                 var result = nn.Predict(inputsForPredict);
                 Console.WriteLine($"{String.Join(",", inputsForPredict)}");
                 Console.WriteLine($"expected - {DataSetGenerator.getMaxId(inputsForPredict)}");
@@ -110,8 +110,8 @@ namespace neuralNetworkRelationNeuronEachToEach
             var nn = new NeuralNetwork(2, new int[] { 2, 2 }, 2, 0.001, 0.001m);
             sw.Stop();
             Console.WriteLine($"create NN time \'{sw.ElapsedMilliseconds}\' milliseconds");
-            var inputsList = DataSetGenerator.getInputList(100, 2, 10);
-            var outputsList = DataSetGenerator.getOutputList(inputsList);
+            var inputsList = DataSetGenerator.getInputListNumber(100, 2, 10);
+            var outputsList = DataSetGenerator.getOutputListForMaxId(inputsList);
             double[,] inputs = DataSetGenerator.getInputsMatrix(inputsList);
             Console.WriteLine(sw.ElapsedMilliseconds.ToString());
             sw.Reset();
