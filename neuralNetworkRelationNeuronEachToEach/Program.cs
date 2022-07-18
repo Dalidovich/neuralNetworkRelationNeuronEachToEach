@@ -16,12 +16,12 @@ namespace neuralNetworkRelationNeuronEachToEach
                 catch
                 {
                     Console.WriteLine("error at load NN");
-                    nn = new NeuralNetwork(2, 2, 2, 2, 0.001, 0.001m);
+                    nn = new NeuralNetwork(2, new int[] { 2, 2 }, 2, 0.001, 0.001m);
                 }
             }
             else
             {
-                nn = new NeuralNetwork(2, 2, 2, 2, 0.001, 0.001m);
+                nn = new NeuralNetwork(2, new int[] { 2, 2 }, 2, 0.001, 0.001m);
                 Console.WriteLine("now");
             }
             Console.WriteLine($"{nn.countNeironInHideLayer}");
@@ -70,7 +70,7 @@ namespace neuralNetworkRelationNeuronEachToEach
             }
             else
             {
-                nn = new NeuralNetwork(3, 4, 5, 3, 0.001, 0.001m);
+                nn = new NeuralNetwork(3, new int[] { 3, 2 }, 3, 0.001, 0.001m);
                 Console.WriteLine("now");
             }
             Console.WriteLine($"{nn.countNeironInHideLayer}");
@@ -107,7 +107,7 @@ namespace neuralNetworkRelationNeuronEachToEach
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            var nn = new NeuralNetwork(2, 5, 5, 2, 0.001, 0.001m);
+            var nn = new NeuralNetwork(2, new int[] { 2, 2 }, 2, 0.001, 0.001m);
             sw.Stop();
             Console.WriteLine($"create NN time \'{sw.ElapsedMilliseconds}\' milliseconds");
             var inputsList = DataSetGenerator.getInputList(100, 2, 10);
@@ -116,15 +116,15 @@ namespace neuralNetworkRelationNeuronEachToEach
             Console.WriteLine(sw.ElapsedMilliseconds.ToString());
             sw.Reset();
             sw.Start();
-            nn.Learn(outputsList.ToArray(), inputs, 1);
+            nn.Learn(outputsList.ToArray(), inputs);
             sw.Stop();
             Console.WriteLine($"learnint NN time \'{sw.ElapsedMilliseconds}\' milliseconds with 1 iteration");
         }
         static void Main(string[] args)
         {
             //testSelectMaxIdWith3InputAndSaveAfterLerning();
-            testSelectMaxIdWith2InputAndSaveAfterLerning(true);
-            //testTime();
+            testSelectMaxIdWith2InputAndSaveAfterLerning();
+            testTime();
             Console.WriteLine("end");
             Console.Read();
         }

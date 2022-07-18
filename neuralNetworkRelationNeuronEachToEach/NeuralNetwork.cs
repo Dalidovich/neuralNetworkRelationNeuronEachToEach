@@ -5,29 +5,27 @@ namespace neuralNetworkRelationNeuronEachToEach
 {
     public class NeuralNetwork
     {
-        public List<LayerNeiron> Layers { get; private set;}
+        public LayerNeiron[] Layers;
         public int countInputNeirons;
         public int countHideLayers;
         public int countNeironInHideLayer;
         public int countOutputNeirons;
         public double smoothing;
         public decimal errorTolerance;
+        private int idCounter = 0;
 
-        public NeuralNetwork(int countInputNeirons, int countHideLayers, int countCountNeironInHideLayer, int countOutputNeirons, double smoothing,decimal errorTolerance)
+        public NeuralNetwork(int countInputNeirons, int[] hidenLayersList, int countOutputNeirons, double smoothing, decimal errorTolerance)
         {
             this.countInputNeirons = countInputNeirons;
-            this.countHideLayers = countHideLayers;
-            this.countNeironInHideLayer = countCountNeironInHideLayer;
             this.countOutputNeirons = countOutputNeirons;
             this.smoothing = smoothing;
             this.errorTolerance = errorTolerance;
-            Layers = new List<LayerNeiron>();
+            Layers = new LayerNeiron[2 + hidenLayersList.Length];
 
             CreateInputLayer();
-            CreateHiddenLayers();
+            CreateHiddenLayers(hidenLayersList);
             CreateOutputLayer();
         }
-
         public NeuralNetwork()
         {
         }
@@ -37,40 +35,45 @@ namespace neuralNetworkRelationNeuronEachToEach
             var inputNeurons = new List<Neuron>();
             for (int i = 0; i < countInputNeirons; i++)
             {
-                var neuron = new Neuron(1,-1, NeuronType.Input);
+                var neuron = new Neuron(idCounter, 1, -1, NeuronType.Input);
+                idCounter++;
                 inputNeurons.Add(neuron);
             }
-            inputNeurons.Add(new Neuron(1, 4, NeuronType.bies));
+            inputNeurons.Add(new Neuron(idCounter, 1, 4, NeuronType.bies));
+            idCounter++;
             var inputLayer = new LayerNeiron(inputNeurons, NeuronType.Input);
-            Layers.Add(inputLayer);
+            Layers[0] = inputLayer;
         }
-        private void CreateHiddenLayers()
+        private void CreateHiddenLayers(int[] list)
         {
-            for (int j = 0; j < countHideLayers; j++)
+            for (int i = 0; i < list.Length; i++)
             {
                 var hiddenNeurons = new List<Neuron>();
-                var lastLayer = Layers.Last();
-                for (int i = 0; i < countNeironInHideLayer; i++)
+                var lastLayer = Layers[i];
+                for (int k = 0; k < list[i]; k++)
                 {
-                    var neuron = new Neuron(lastLayer.NeuronCount,-1);
+                    var neuron = new Neuron(idCounter, lastLayer.NeuronCount, -1);
+                    idCounter++;
                     hiddenNeurons.Add(neuron);
                 }
-                hiddenNeurons.Add(new Neuron(lastLayer.NeuronCount, 4, NeuronType.bies));
+                hiddenNeurons.Add(new Neuron(idCounter, lastLayer.NeuronCount, 4, NeuronType.bies));
+                idCounter++;
                 var hiddenLayer = new LayerNeiron(hiddenNeurons);
-                Layers.Add(hiddenLayer);
+                Layers[i + 1] = hiddenLayer;
             }
         }
         private void CreateOutputLayer()
         {
             var outputNeurons = new List<Neuron>();
-            var lastLayer = Layers.Last();
+            var lastLayer = Layers[Layers.Length - 2];
             for (int i = 0; i < countOutputNeirons; i++)
             {
-                var neuron = new Neuron(lastLayer.NeuronCount,i+1, NeuronType.Output);
+                var neuron = new Neuron(idCounter, lastLayer.NeuronCount, i + 1, NeuronType.Output);
+                idCounter++;
                 outputNeurons.Add(neuron);
             }
             var outputLayer = new LayerNeiron(outputNeurons, NeuronType.Output);
-            Layers.Add(outputLayer);
+            Layers[Layers.Length - 1] = outputLayer;
         }
         public List<Neuron> Predict(params double[] inputSignals)
         {
@@ -115,7 +118,7 @@ namespace neuralNetworkRelationNeuronEachToEach
         }
         private void FeedForwardAllLayersAfterInput()
         {
-            for (int i = 1; i < Layers.Count; i++)
+            for (int i = 1; i < Layers.Length; i++)
             {
                 var layer = Layers[i];
                 var previousLayerSingals = Layers[i - 1].GetSignals();
@@ -200,7 +203,7 @@ namespace neuralNetworkRelationNeuronEachToEach
                 differences[i] = differenceCurrentNeuron;
                 Layers.Last().Neurons[i].Learn(differenceCurrentNeuron, smoothing);
             }            
-            for (int j = Layers.Count - 2; j >= 0; j--)
+            for (int j = Layers.Length - 2; j >= 0; j--)
             {
                 var layer = Layers[j];
                 var previousLayer = Layers[j + 1];

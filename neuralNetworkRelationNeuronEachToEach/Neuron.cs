@@ -2,19 +2,20 @@
 {
     public class Neuron
     {
+        public int id { get; set; }
         public int OutputId;
         public List<double> Weights { get; }
         public List<double> Inputs { get; }
         public NeuronType NeuronType { get; }
         public double Output { get; private set; }
         public double Delta { get; private set; }
-        public Neuron(int inputCount,int outputId, NeuronType type = NeuronType.Normal)
+        public Neuron(int id,int inputCount,int outputId, NeuronType type = NeuronType.Normal)
         {
             OutputId = outputId;
             NeuronType = type;
             Weights = new List<double>();
             Inputs = new List<double>();
-
+            this.id = id;
             InitWeightsRandomValue(inputCount);
         }
         private void InitWeightsRandomValue(int inputCount)
