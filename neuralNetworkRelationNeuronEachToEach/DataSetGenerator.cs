@@ -1,4 +1,5 @@
-﻿namespace neuralNetworkRelationNeuronEachToEach
+﻿using System.Drawing;
+namespace neuralNetworkRelationNeuronEachToEach
 {
     public class DataSetGenerator
     {
@@ -10,7 +11,7 @@
         /// </summary>
         /// <param name="count">количество чисел в массиве</param>
         /// <param name="maxVaalue">максимальное значение числа</param>
-        public static double[] getInputUniqueNumberDataRowArray(int count, int maxVaalue = 10)
+        public static double[] generateInputUniqueNumberDataRowArray(int count, int maxValue = 10)
         {
             var input = new List<double>();
             for (int i = 0; i < count; i++)
@@ -19,7 +20,8 @@
                 bool rep = true;
                 while (rep)
                 {
-                    a = rnd.Next(maxVaalue);
+                    a = Convert.ToDouble("0," + rnd.Next(maxValue).ToString());
+                    //a = rnd.Next(10);
                     if (!input.Contains(a))
                     {
                         input.Add(a);
@@ -44,54 +46,24 @@
                     idMax = i;
                 }
             }
-            return idMax + 1;
+            return idMax;
         }
-        /// <summary>
-        /// Метод getInputListNumber() возвращяет
-        /// лист массивов из неповторяющихся чисел
-        /// </summary>
-        /// <param name="countDataRow">количество массивов в листе</param>
-        /// <param name="countDataInOneRow">количество чисел в массиве</param>
-        /// <param name="maxValueData">максимальное значение числа в массиве</param>
-        public static List<double[]> getInputListNumber(int countDataRow, int countDataInOneRow, int maxValueData)
+
+        public static double[,] createInputMatrixForMaxId(ref double[] expected, int rowCount, int collumCount, int maxValue = 10)
         {
-            var list = new List<double[]>();
-            for (int i = 0; i < countDataRow; i++)
+            double[] exp = new double[rowCount];
+            var matrix = new double[rowCount, collumCount];
+            for (int i = 0; i < rowCount; i++)
             {
-                list.Add(getInputUniqueNumberDataRowArray(countDataInOneRow, maxValueData));
-            }
-            return list;
-        }
-        /// <summary>
-        /// Метод getOutputListForMaxId() возвращяет
-        /// лист с идентификаторами максимальных чисел из input
-        /// </summary>
-        /// <param name="input">лист массивов с неповторяющимися значениями</param>
-        public static List<double> getOutputListForMaxId(List<double[]> input)
-        {
-            var list = new List<double>();
-            foreach (var item in input)
-            {
-                list.Add(getMaxId(item));
-            }
-            return list;
-        }
-        /// <summary>
-        /// Метод getInputsMatrix() преобразует
-        /// лист массивов в матрицу
-        /// </summary>
-        /// <param name="inputList">лист массивов с неповторяющимися</param>
-        public static double[,] getInputsMatrix(List<double[]> inputList)
-        {
-            var input = new double[inputList.Count, inputList[0].Length];
-            for (int i = 0; i < inputList.Count; i++)
-            {
-                for (int k = 0; k < inputList[i].Length; k++)
+                var input = generateInputUniqueNumberDataRowArray(collumCount, maxValue);
+                exp[i] = getMaxId(input);
+                for (int k = 0; k < collumCount; k++)
                 {
-                    input[i, k] = inputList[i][k];
+                    matrix[i, k] = input[k];
                 }
             }
-            return input;
+            expected = exp;
+            return matrix;
         }
         /// <summary>
         /// Метод showInputOutputData() выводит
@@ -106,10 +78,59 @@
                 Console.Write($"expected - {expected[i]}\t");
                 for (int k = 0; k < inputs.GetUpperBound(1) + 1; k++)
                 {
-                    Console.Write($"inputs - {inputs[i, k]},");
+                    Console.Write($"inputs - {inputs[i, k]}\t");
                 }
                 Console.WriteLine();
             }
+        }
+
+        public static double[] ImageToArray(string path)
+        {
+            Bitmap bitmap = new Bitmap(path);
+            List<double> list = new List<double>();
+            for (int i = 0; i < bitmap.Size.Width; i++)
+            {
+                for (int k = 0; k < bitmap.Size.Height; k++)
+                {
+                    list.Add(bitmap.GetPixel(i, k).R / 255);
+                }
+            }
+            return list.ToArray();
+        }
+        public static double[,] createInputMatrixForImage(string dataSetFolderPath, int c, ref double[] expected)
+        {
+
+            string[] allfiles = Directory.GetFiles(dataSetFolderPath);
+            int countRow = c;
+            var imgSizeFile = new Bitmap(allfiles[0]).Size;
+            double[] exp = new double[countRow];
+            var matrix = new double[countRow, imgSizeFile.Width * imgSizeFile.Height];
+            //allfiles.Length=60 000
+            for (int i = 0; i < countRow; i++)
+            {
+                var imgArray = ImageToArray(allfiles[i]);
+                for (int k = 0; k < imgSizeFile.Width * imgSizeFile.Height; k++)
+                {
+                    matrix[i, k] = imgArray[k];
+                }
+                exp[i] = Convert.ToDouble(allfiles[i][allfiles[i].LastIndexOf("-num") + 4].ToString());
+            }
+            expected = exp;
+            return matrix;
+        }
+        public static double[,] createInputMatrixForAutoEncoder(ref double[,] expected, int rowCount, int collumCount, int maxValue = 10)
+        {
+            var matrix = new double[rowCount, collumCount];
+            for (int i = 0; i < rowCount; i++)
+            {
+                var data = generateInputUniqueNumberDataRowArray(expected.GetLength(1), maxValue);
+                for (int k = 0; k < collumCount; k++)
+                {
+                    matrix[i, k] = data[k];
+                }
+            }
+            expected = matrix;
+            return matrix;
         }
     }
 }

@@ -18,26 +18,31 @@
             this.id = id;
             InitWeightsRandomValue(inputCount);
         }
+        public Task initTask;
         private void InitWeightsRandomValue(int inputCount)
         {
-            //Console.WriteLine(inputCount);
-            for (int i = 0; i < inputCount; i++)
+            initTask=new Task(() =>//Console.WriteLine(inputCount);
             {
-                var rnd = new Random();
-                Thread.Sleep(100);
-                var a = rnd.NextDouble() - 0.5;
-                if (NeuronType == NeuronType.Input || NeuronType == NeuronType.bies)
+                for (int i = 0; i < inputCount; i++)
                 {
-                    Weights.Add(1);
+                    var rnd = new Random();
+                    Thread.Sleep(100);
+                    var a = rnd.NextDouble();
+                    if (NeuronType == NeuronType.Input || NeuronType == NeuronType.bies)
+                    {
+                        Weights.Add(1);
+                    }
+                    else
+                    {
+                        //Console.WriteLine($"create weight={a}. i={i},type={NeuronType},id={OutputId},otput={Output}");
+                        //Console.WriteLine(a);
+                        Weights.Add(a);
+                    }
+                    Inputs.Add(1);
+                    //Console.WriteLine($"{id} neuron\tinit {i + 1} out of {inputCount} weight");
                 }
-                else
-                {
-                    //Console.WriteLine($"create weight={a}. i={i},type={NeuronType},id={OutputId},otput={Output}");
-                    //Console.WriteLine(a);
-                    Weights.Add(a);
-                }
-                Inputs.Add(1);
-            }
+            });
+            
         }
         public double FeedForward(List<double> inputs)
         {
@@ -76,7 +81,7 @@
         }
         public void Learn(double error, double learningRate)
         {
-            if (NeuronType == NeuronType.Input || NeuronType==NeuronType.bies)
+            if (NeuronType == NeuronType.Input || NeuronType == NeuronType.bies)
             {
                 return;
             }
@@ -86,7 +91,7 @@
             {
                 var weight = Weights[i];
                 var input = Inputs[i];
-
+                    
                 var newWeigth = weight - input * Delta * learningRate;
                 Weights[i] = newWeigth;
             }

@@ -13,6 +13,7 @@ namespace neuralNetworkRelationNeuronEachToEach
         public double smoothing;
         public decimal errorTolerance;
         private int idCounter = 0;
+        public Task[] initTasks;
 
         public NeuralNetwork(int countInputNeirons, int[] hidenLayersList, int countOutputNeirons, double smoothing, decimal errorTolerance)
         {
@@ -21,10 +22,14 @@ namespace neuralNetworkRelationNeuronEachToEach
             this.smoothing = smoothing;
             this.errorTolerance = errorTolerance;
             Layers = new LayerNeiron[2 + hidenLayersList.Length];
-
+            initTasks = new Task[countInputNeirons+1 + hidenLayersList.Sum()+hidenLayersList.Length+ countOutputNeirons];
             CreateInputLayer();
+            //Console.WriteLine("input Layer created");
             CreateHiddenLayers(hidenLayersList);
             CreateOutputLayer();
+            //Console.WriteLine("output Layer created");
+            Task.WaitAll(initTasks);
+            //Console.WriteLine("all neurons init");
         }
         public NeuralNetwork()
         {
@@ -36,30 +41,43 @@ namespace neuralNetworkRelationNeuronEachToEach
             for (int i = 0; i < countInputNeirons; i++)
             {
                 var neuron = new Neuron(idCounter, 1, -1, NeuronType.Input);
+                initTasks[idCounter] = neuron.initTask;
+                initTasks[idCounter].Start();
                 idCounter++;
                 inputNeurons.Add(neuron);
+                //Console.WriteLine($"create {i+1} out of {countInputNeirons} neuron");
             }
             inputNeurons.Add(new Neuron(idCounter, 1, 4, NeuronType.bies));
+            initTasks[idCounter] = inputNeurons.Last().initTask;
+            initTasks[idCounter].Start();
             idCounter++;
             var inputLayer = new LayerNeiron(inputNeurons, NeuronType.Input);
             Layers[0] = inputLayer;
         }
         private void CreateHiddenLayers(int[] list)
         {
+            //Console.WriteLine("start created hide layers");
             for (int i = 0; i < list.Length; i++)
             {
+                //Console.WriteLine($"start create {i+1} out of {list.Length} hide layers");
                 var hiddenNeurons = new List<Neuron>();
                 var lastLayer = Layers[i];
                 for (int k = 0; k < list[i]; k++)
                 {
                     var neuron = new Neuron(idCounter, lastLayer.NeuronCount, -1);
+                    initTasks[idCounter] = neuron.initTask;
+                    initTasks[idCounter].Start();
+                    //Console.WriteLine($"create {k + 1} out of {list[i]} neuron");
                     idCounter++;
                     hiddenNeurons.Add(neuron);
                 }
                 hiddenNeurons.Add(new Neuron(idCounter, lastLayer.NeuronCount, 4, NeuronType.bies));
+                initTasks[idCounter] = hiddenNeurons.Last().initTask;
+                initTasks[idCounter].Start();
                 idCounter++;
                 var hiddenLayer = new LayerNeiron(hiddenNeurons);
                 Layers[i + 1] = hiddenLayer;
+                //Console.WriteLine($"{i+1} out of {list.Length} hide Layer created");
             }
         }
         private void CreateOutputLayer()
@@ -68,7 +86,9 @@ namespace neuralNetworkRelationNeuronEachToEach
             var lastLayer = Layers[Layers.Length - 2];
             for (int i = 0; i < countOutputNeirons; i++)
             {
-                var neuron = new Neuron(idCounter, lastLayer.NeuronCount, i + 1, NeuronType.Output);
+                var neuron = new Neuron(idCounter, lastLayer.NeuronCount, i, NeuronType.Output);
+                initTasks[idCounter] = neuron.initTask;
+                initTasks[idCounter].Start();
                 idCounter++;
                 outputNeurons.Add(neuron);
             }
@@ -99,23 +119,6 @@ namespace neuralNetworkRelationNeuronEachToEach
                 neuron.FeedForward(signal);
             }
         }
-        public void showLastLayer()
-        {
-            var last = Layers.Last();
-            foreach (var item in last.Neurons)
-            {
-                Console.WriteLine($"id - {item.OutputId} with value {item.Output}, type - {item.NeuronType}, w - {item.Weights[0]}");
-            }
-            showHideLayer();
-        }
-        public void showHideLayer()
-        {
-            var last = Layers[1];
-            foreach (var item in last.Neurons)
-            {
-                Console.WriteLine($"id - {item.OutputId} with value {item.Output}, type - {item.NeuronType}, w - {item.Weights[0]}");
-            }
-        }
         private void FeedForwardAllLayersAfterInput()
         {
             for (int i = 1; i < Layers.Length; i++)
@@ -141,16 +144,16 @@ namespace neuralNetworkRelationNeuronEachToEach
                 {
                     var output = expected[j];
                     var input = GetRow(inputs, j);
-                    i++;
 
                     error = Convert.ToDecimal(Backpropagation(output, input));
                 }
+                i++;
                 if (lastError == error)
                 {
                     Console.WriteLine("rep");
                     return 0;
                 }
-                if (i % 10000 == 0)
+                if (i % 1000 == 0)
                     Console.WriteLine($"iteration: {i},\t error - {error},\tlast error - {lastError}");
 
                 lastError = error;
@@ -163,7 +166,7 @@ namespace neuralNetworkRelationNeuronEachToEach
             var error = 0.0;
             for (int i = 0; i < epoch; i++)
             {
-                for (int j = 0; j < expected.GetUpperBound(0); j++)
+                for (int j = 0; j < expected.GetUpperBound(0)+1; j++)
                 {
                     var output = expected[j];
                     var input = GetRow(inputs, j);
@@ -171,6 +174,8 @@ namespace neuralNetworkRelationNeuronEachToEach
                     //Console.WriteLine("error - " + Convert.ToDecimal(error));
                     error = Backpropagation(output, input);
                 }
+                if (i % 1000 == 0)
+                    Console.WriteLine($"iteration: {i},\t error - {error},\t");
             }
 
             var result = error / epoch;
@@ -184,6 +189,7 @@ namespace neuralNetworkRelationNeuronEachToEach
                 array[i] = matrix[row, i];
             return array;
         }
+        
         private double Backpropagation(double exprected, params double[] inputs)
         {
 
@@ -198,11 +204,12 @@ namespace neuralNetworkRelationNeuronEachToEach
                 }
                 else
                 {
-                    differenceCurrentNeuron = i == exprected - 1 ? actual[i].Output - 1 : actual[i].Output;
+                    differenceCurrentNeuron = i == exprected ? actual[i].Output - 1 : actual[i].Output;
                 }
                 differences[i] = differenceCurrentNeuron;
+
                 Layers.Last().Neurons[i].Learn(differenceCurrentNeuron, smoothing);
-            }            
+            }
             for (int j = Layers.Length - 2; j >= 0; j--)
             {
                 var layer = Layers[j];
@@ -211,21 +218,20 @@ namespace neuralNetworkRelationNeuronEachToEach
                 for (int i = 0; i < layer.NeuronCount; i++)
                 {
                     var neuron = layer.Neurons[i];
-
                     for (int k = 0; k < previousLayer.NeuronCount; k++)
                     {
                         var previousNeuron = previousLayer.Neurons[k];
                         var error = previousNeuron.Weights[i] * previousNeuron.Delta;
-                        //new Task(() => {
-                            neuron.Learn(error, smoothing);
-                        //}).Start();
+                        neuron.Learn(error, smoothing);
+                        //t[k] = neuron.learnTask;
+                        //t[k].Start();
                     }
+                    //Task.WaitAll(t);
                 }
                 
             }
             double multiplyResult = 1;
-            differences.ToList().ForEach(x => multiplyResult = x * multiplyResult);
-            return multiplyResult;
+            return differences.Max(x => Math.Abs(x));
         }
         public void saveNN(string fileName)
         {
