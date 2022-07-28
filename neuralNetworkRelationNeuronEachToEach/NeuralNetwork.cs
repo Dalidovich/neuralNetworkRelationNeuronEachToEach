@@ -130,6 +130,14 @@ namespace neuralNetworkRelationNeuronEachToEach
                 {
                     neuron.FeedForward(previousLayerSingals);
                 }
+           
+            }
+        }
+        public void wr(decimal value)
+        {
+            using (StreamWriter sw = new StreamWriter("errors.txt", true))
+            {
+                sw.WriteLine(value);
             }
         }
         public double Learn(double[] expected, double[,] inputs)
@@ -144,7 +152,7 @@ namespace neuralNetworkRelationNeuronEachToEach
                 {
                     var output = expected[j];
                     var input = GetRow(inputs, j);
-
+                    wr(error);
                     error = Convert.ToDecimal(Backpropagation(output, input));
                 }
                 i++;
@@ -231,7 +239,7 @@ namespace neuralNetworkRelationNeuronEachToEach
                 
             }
             double multiplyResult = 1;
-            return differences.Max(x => Math.Abs(x));
+            return differences.Sum(x=>x*x);
         }
         public void saveNN(string fileName)
         {
