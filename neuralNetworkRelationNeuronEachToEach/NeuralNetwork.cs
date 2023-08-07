@@ -24,13 +24,11 @@ namespace neuralNetworkRelationNeuronEachToEach
             Layers = new LayerNeiron[2 + hidenLayersList.Length];
             initTasks = new Task[countInputNeirons+1 + hidenLayersList.Sum()+hidenLayersList.Length+ countOutputNeirons];
             CreateInputLayer();
-            //Console.WriteLine("input Layer created");
             CreateHiddenLayers(hidenLayersList);
             CreateOutputLayer();
-            //Console.WriteLine("output Layer created");
             Task.WaitAll(initTasks);
-            //Console.WriteLine("all neurons init");
         }
+
         public NeuralNetwork()
         {
         }
@@ -42,44 +40,45 @@ namespace neuralNetworkRelationNeuronEachToEach
             {
                 var neuron = new Neuron(idCounter, 1, -1, NeuronType.Input);
                 initTasks[idCounter] = neuron.initTask;
-                initTasks[idCounter].Start();
+                //initTasks[idCounter].Start();
+                initTasks[idCounter].RunSynchronously();
                 idCounter++;
                 inputNeurons.Add(neuron);
-                //Console.WriteLine($"create {i+1} out of {countInputNeirons} neuron");
             }
             inputNeurons.Add(new Neuron(idCounter, 1, 4, NeuronType.bies));
             initTasks[idCounter] = inputNeurons.Last().initTask;
-            initTasks[idCounter].Start();
+            //initTasks[idCounter].Start();
+            initTasks[idCounter].RunSynchronously();
             idCounter++;
             var inputLayer = new LayerNeiron(inputNeurons, NeuronType.Input);
             Layers[0] = inputLayer;
         }
+
         private void CreateHiddenLayers(int[] list)
         {
-            //Console.WriteLine("start created hide layers");
             for (int i = 0; i < list.Length; i++)
             {
-                //Console.WriteLine($"start create {i+1} out of {list.Length} hide layers");
                 var hiddenNeurons = new List<Neuron>();
                 var lastLayer = Layers[i];
                 for (int k = 0; k < list[i]; k++)
                 {
                     var neuron = new Neuron(idCounter, lastLayer.NeuronCount, -1);
                     initTasks[idCounter] = neuron.initTask;
-                    initTasks[idCounter].Start();
-                    //Console.WriteLine($"create {k + 1} out of {list[i]} neuron");
+                    //initTasks[idCounter].Start();
+                    initTasks[idCounter].RunSynchronously();
                     idCounter++;
                     hiddenNeurons.Add(neuron);
                 }
                 hiddenNeurons.Add(new Neuron(idCounter, lastLayer.NeuronCount, 4, NeuronType.bies));
                 initTasks[idCounter] = hiddenNeurons.Last().initTask;
-                initTasks[idCounter].Start();
+                //initTasks[idCounter].Start();
+                initTasks[idCounter].RunSynchronously();
                 idCounter++;
                 var hiddenLayer = new LayerNeiron(hiddenNeurons);
                 Layers[i + 1] = hiddenLayer;
-                //Console.WriteLine($"{i+1} out of {list.Length} hide Layer created");
             }
         }
+
         private void CreateOutputLayer()
         {
             var outputNeurons = new List<Neuron>();
@@ -88,13 +87,15 @@ namespace neuralNetworkRelationNeuronEachToEach
             {
                 var neuron = new Neuron(idCounter, lastLayer.NeuronCount, i, NeuronType.Output);
                 initTasks[idCounter] = neuron.initTask;
-                initTasks[idCounter].Start();
+                //initTasks[idCounter].Start();
+                initTasks[idCounter].RunSynchronously();
                 idCounter++;
                 outputNeurons.Add(neuron);
             }
             var outputLayer = new LayerNeiron(outputNeurons, NeuronType.Output);
             Layers[Layers.Length - 1] = outputLayer;
         }
+
         public List<Neuron> Predict(params double[] inputSignals)
         {
             SendSignalsToInputNeurons(inputSignals);
@@ -109,7 +110,8 @@ namespace neuralNetworkRelationNeuronEachToEach
                 return Layers.Last().Neurons;
             }
         }
-        private void SendSignalsToInputNeurons(params double[] inputSignals)
+
+        public void SendSignalsToInputNeurons(params double[] inputSignals)
         {
             for (int i = 0; i < inputSignals.Length; i++)
             {
@@ -119,7 +121,8 @@ namespace neuralNetworkRelationNeuronEachToEach
                 neuron.FeedForward(signal);
             }
         }
-        private void FeedForwardAllLayersAfterInput()
+
+        public void FeedForwardAllLayersAfterInput()
         {
             for (int i = 1; i < Layers.Length; i++)
             {
@@ -133,13 +136,7 @@ namespace neuralNetworkRelationNeuronEachToEach
            
             }
         }
-        public void wr(decimal value)
-        {
-            using (StreamWriter sw = new StreamWriter("errors.txt", true))
-            {
-                sw.WriteLine(value);
-            }
-        }
+
         public double Learn(double[] expected, double[,] inputs)
         {
             var error = 90.0m;
@@ -147,12 +144,10 @@ namespace neuralNetworkRelationNeuronEachToEach
             ulong i = 0;
             do
             {
-                //Console.WriteLine("sd");
                 for (int j = 0; j < expected.Length; j++)
                 {
                     var output = expected[j];
                     var input = GetRow(inputs, j);
-                    wr(error);
                     error = Convert.ToDecimal(Backpropagation(output, input));
                 }
                 i++;
@@ -169,6 +164,7 @@ namespace neuralNetworkRelationNeuronEachToEach
             while ((error > Convert.ToDecimal(errorTolerance) || error < Convert.ToDecimal(-errorTolerance)));
             return 0;
         }
+
         public double Learn(double[] expected, double[,] inputs, int epoch)
         {
             var error = 0.0;
@@ -179,7 +175,6 @@ namespace neuralNetworkRelationNeuronEachToEach
                     var output = expected[j];
                     var input = GetRow(inputs, j);
 
-                    //Console.WriteLine("error - " + Convert.ToDecimal(error));
                     error = Backpropagation(output, input);
                 }
                 if (i % 1000 == 0)
@@ -189,6 +184,7 @@ namespace neuralNetworkRelationNeuronEachToEach
             var result = error / epoch;
             return result;
         }
+
         public static double[] GetRow(double[,] matrix, int row)
         {
             var columns = matrix.GetLength(1);
@@ -198,9 +194,8 @@ namespace neuralNetworkRelationNeuronEachToEach
             return array;
         }
         
-        private double Backpropagation(double exprected, params double[] inputs)
+        public double Backpropagation(double exprected, params double[] inputs)
         {
-
             var actual = Predict(inputs);
             double[] differences = new double[Layers.Last().Neurons.Count];
             for (int i = 0; i < Layers.Last().Neurons.Count; i++)
@@ -212,7 +207,7 @@ namespace neuralNetworkRelationNeuronEachToEach
                 }
                 else
                 {
-                    differenceCurrentNeuron = i == exprected ? actual[i].Output - 1 : actual[i].Output;
+                    differenceCurrentNeuron = i == exprected ? 1 - actual[i].Output : -actual[i].Output;
                 }
                 differences[i] = differenceCurrentNeuron;
 
@@ -229,23 +224,26 @@ namespace neuralNetworkRelationNeuronEachToEach
                     for (int k = 0; k < previousLayer.NeuronCount; k++)
                     {
                         var previousNeuron = previousLayer.Neurons[k];
+                        if (previousNeuron.NeuronType == NeuronType.bies)
+                        {
+                            continue;
+                        }
                         var error = previousNeuron.Weights[i] * previousNeuron.Delta;
-                        neuron.Learn(error, smoothing);
-                        //t[k] = neuron.learnTask;
-                        //t[k].Start();
+                        neuron.Learn(error, smoothing, previousNeuron.Delta);
                     }
-                    //Task.WaitAll(t);
                 }
                 
             }
             double multiplyResult = 1;
             return differences.Sum(x=>x*x);
         }
+
         public void saveNN(string fileName)
         {
             string json = JsonConvert.SerializeObject(this);            
             System.IO.File.WriteAllText($"{fileName}.json", json);
         }
+
         public static NeuralNetwork loadNN(string filename)
         {
             var nn = new NeuralNetwork();
@@ -253,29 +251,6 @@ namespace neuralNetworkRelationNeuronEachToEach
             dynamic staff = JObject.Parse(jsonAll);
             nn= JsonConvert.DeserializeObject<NeuralNetwork>(staff.ToString());
             nn.Layers = JsonConvert.DeserializeObject<List<LayerNeiron>>(staff.Layers.ToString());
-            //Console.WriteLine(staff.Layers[1].Type);
-            //List<LayerNeiron> lln = new List<LayerNeiron>();
-            //for (int i = 0; i < staff.Layers.Count; i++)
-            //{
-            //    LayerNeiron layer = new LayerNeiron();
-            //    List<Neuron> ln = new List<Neuron>();
-            //    for (int k = 0; k < staff.Layers[i].Count; k++)
-            //    {
-            //        Console.WriteLine(staff.Layers[i][k]);
-            //        var neuron = JsonConvert.DeserializeObject<Neuron>(staff.Layers[i][k].ToString());
-            //        ln.Add(neuron);
-            //    }
-            //    layer.Neurons = ln;
-            //    lln.Add(layer);
-            //}
-            //Console.WriteLine("sd");
-            //nn.Layers = lln;
-            //string jsonAll = System.IO.File.ReadAllText($"{filename}.json");
-            //string jsonLayers = "{" + jsonAll.Substring(jsonAll.IndexOf("\"Layers"));
-            //var layers = JsonConvert.DeserializeObject<LayerNeiron>(jsonLayers);
-            //nn= JsonConvert.DeserializeObject<NeuralNetwork>(jsonAll);
-            //nn.Layers = layers;
-            //return JsonConvert.DeserializeObject<NeuralNetwork>(jsonAll);
             return nn;
         }
     }

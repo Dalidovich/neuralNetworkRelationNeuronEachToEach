@@ -35,26 +35,20 @@ namespace neuralNetworkRelationNeuronEachToEach
                 nn.saveNN("selectIndexMaxIdWith2Input");
             }
         }
-        static void testTime()
-        {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            var nn = new NeuralNetwork(2, new int[] { 2, 2 }, 2, 0.001, 0.001m);
-            sw.Stop();
-            Console.WriteLine($"create NN time \'{sw.ElapsedMilliseconds}\' milliseconds");
-            var outputsList = new double[100];
-            double[,] inputs = DataSetGenerator.createInputMatrixForMaxId(ref outputsList, outputsList.Length, 2);
-            Console.WriteLine(sw.ElapsedMilliseconds.ToString());
-            sw.Reset();
-            sw.Start();
-            nn.Learn(outputsList.ToArray(), inputs,1);
-            sw.Stop();
-            Console.WriteLine($"learnint NN time \'{sw.ElapsedMilliseconds}\' milliseconds with 1 iteration");
-        }
+
         static void Main(string[] args)
         {
-            testSelectMaxIdWithAmong2Number();
+            //testSelectMaxIdWithAmong2Number();
             //testTime();
+            randomForTest.setSeed(13);
+            var nn = new NeuralNetwork(2, new int[] { 2, 2 }, 2, 0.001, 0.001m);
+            nn.SendSignalsToInputNeurons(new double[] { 0.8, 0.6 });
+            nn.FeedForwardAllLayersAfterInput();
+            Console.WriteLine();
+            var outputsList = new double[] { 1 };
+            double[,] inputs = new double[,] { { 0.8, 0.6 } };
+            nn.Learn(outputsList.ToArray(), inputs, 1);
+
             Console.WriteLine("end");
         }
     }

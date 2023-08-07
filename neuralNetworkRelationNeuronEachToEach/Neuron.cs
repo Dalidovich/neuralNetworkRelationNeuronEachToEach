@@ -9,6 +9,7 @@
         public NeuronType NeuronType { get; }
         public double Output { get; private set; }
         public double Delta { get; private set; }
+
         public Neuron(int id,int inputCount,int outputId, NeuronType type = NeuronType.Normal)
         {
             OutputId = outputId;
@@ -17,38 +18,47 @@
             Inputs = new List<double>();
             this.id = id;
             InitWeightsRandomValue(inputCount);
+            if (type == NeuronType.bies)
+            {
+                Output = 1;
+            }
         }
+
         public Task initTask;
+
         private void InitWeightsRandomValue(int inputCount)
         {
-            initTask=new Task(() =>//Console.WriteLine(inputCount);
+            initTask=new Task(() =>
             {
                 for (int i = 0; i < inputCount; i++)
                 {
-                    var rnd = new Random();
                     Thread.Sleep(100);
-                    var a = rnd.NextDouble();
                     if (NeuronType == NeuronType.Input || NeuronType == NeuronType.bies)
                     {
                         Weights.Add(1);
                     }
                     else
                     {
-                        //Console.WriteLine($"create weight={a}. i={i},type={NeuronType},id={OutputId},otput={Output}");
-                        //Console.WriteLine(a);
-                        Weights.Add(a);
+                        if (i != inputCount - 1)
+                        {
+                            var a = randomForTest.v();
+                            Weights.Add(a);
+                        }
+                        else
+                        {
+                            Weights.Add(1.0);
+                        }
                     }
                     Inputs.Add(1);
-                    //Console.WriteLine($"{id} neuron\tinit {i + 1} out of {inputCount} weight");
                 }
             });
             
         }
+
         public double FeedForward(List<double> inputs)
         {
             for (int i = 0; i < inputs.Count; i++)
             {
-                //MessageBox.Show(NeuronType.ToString()+"\n"+inputs[i].ToString()+"\n"+ Inputs.Count+"\n"+inputs.Count);
                 Inputs[i] = inputs[i];
             }
 
@@ -57,8 +67,9 @@
             {
                 sum += inputs[i] * Weights[i];
             }
-
-            if (NeuronType != NeuronType.Input || NeuronType==NeuronType.bies)
+            if (NeuronType == NeuronType.bies)
+                return 1;
+            if (NeuronType != NeuronType.Input && NeuronType!=NeuronType.bies)
             {
                 Output = Sigmoid(sum);
             }
@@ -68,18 +79,21 @@
             }
             return Output;
         }
+
         private double Sigmoid(double x)
         {
             var result = 1.0 / (1.0 + Math.Pow(Math.E, -x));
             return result;
         }
+
         private double SigmoidDx(double x)
         {
             var sigmoid = Sigmoid(x);
             var result = sigmoid / (1 - sigmoid);
             return result;
         }
-        public void Learn(double error, double learningRate)
+
+        public void Learn(double error, double learningRate,double neuronNum=0)
         {
             if (NeuronType == NeuronType.Input || NeuronType == NeuronType.bies)
             {
@@ -92,10 +106,11 @@
                 var weight = Weights[i];
                 var input = Inputs[i];
                     
-                var newWeigth = weight - input * Delta * learningRate;
+                var newWeigth = weight + input * Delta * learningRate;
                 Weights[i] = newWeigth;
             }
         }
+
         public override string ToString()
         {
             return Output.ToString();
